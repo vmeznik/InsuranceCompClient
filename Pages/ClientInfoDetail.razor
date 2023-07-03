@@ -1,0 +1,312 @@
+﻿@page "/ClientInfoDetail"
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager navigationManager
+@inject IEmpService iEmpService
+
+
+<style>
+    body {
+        background: linear-gradient(to bottom right, #790909, #db00ff);
+    }
+
+    .content {
+        margin-top: 0;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .headline {
+        font-size: 3rem;
+        margin-top: -30px;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: red;
+        border-color: red;
+    }
+
+        .btn-primary:hover {
+            background-color: blue;
+            border-color: blue;
+        }
+
+    .back-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background-color: grey;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+    }
+</style>
+
+<div class="content">
+    <div class="container">
+        <h1 class="text-center text-white mb-4 headline">MyInsurance</h1>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">Client Information</h2>
+                        <table class="table">
+                            <tr>
+                                <th>First Name</th>
+                                <td>
+                                    @if (!editModeFirstName)
+                                    {
+                                        <span>@client.FirstName</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditFirstName">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.FirstName" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditFirstName">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Last Name</th>
+                                <td>
+                                    @if (!editModeLastName)
+                                    {
+                                        <span>@client.LastName</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditLastName">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.LastName" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditLastName">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Employer</th>
+                                <td>
+                                    @if (!editModeEmployer)
+                                    {
+                                        <span>@client.Employer</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditEmployer">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.Employer" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditEmployer">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>
+                                    @if (!editModeEmail)
+                                    {
+                                        <span>@client.Email</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditEmail">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.Email" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditEmail">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+                                <td>
+                                    @if (!editModePhone)
+                                    {
+                                        <span>@client.Phone</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditPhone">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.Phone" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditPhone">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Address</th>
+                                <td>
+                                    @if (!editModeAddress)
+                                    {
+                                        <span>@client.Address</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditAddress">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.Address" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditAddress">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Debt</th>
+                                <td>
+                                    @if (!editModeDebt)
+                                    {
+                                        <span>@client.Debt CZK</span>
+                                        <button class="btn btn-primary" @onclick="ToggleEditDebt">Edit</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="form-control" @bind="editedClient.Debt" />
+                                        <button class="btn btn-success" @onclick="ConfirmEditDebt">Confirm</button>
+                                    }
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<button class="back-button" @onclick="GoBack">Back</button>
+
+
+
+
+
+@code {
+    private Client client;
+    private Client editedClient;
+    private bool editModeFirstName;
+    private bool editModeLastName;
+    private bool editModeEmployer;
+    private bool editModeEmail;
+    private bool editModePhone;
+    private bool editModeAddress;
+    private bool editModeDebt;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch client information from the service
+        client = iEmpService.getClientInfo();
+
+        // Create a copy of the client object for editing
+        editedClient = new Client
+        {
+            FirstName = client.FirstName,
+            LastName = client.LastName,
+            Id = client.Id,
+            Employer = client.Employer,
+            Email = client.Email,
+            Phone = client.Phone,
+            Address = client.Address,
+            Debt = client.Debt
+        };
+    }
+
+    private void ToggleEditFirstName()
+    {
+        editModeFirstName = !editModeFirstName;
+    }
+
+    private void ToggleEditLastName()
+    {
+        editModeLastName = !editModeLastName;
+    }
+
+    private void ToggleEditEmployer()
+    {
+        editModeEmployer = !editModeEmployer;
+    }
+
+    private void ToggleEditEmail()
+    {
+        editModeEmail = !editModeEmail;
+    }
+
+    private void ToggleEditPhone()
+    {
+        editModePhone = !editModePhone;
+    }
+
+    private void ToggleEditAddress()
+    {
+        editModeAddress = !editModeAddress;
+    }
+
+    private void ToggleEditDebt()
+    {
+        editModeDebt = !editModeDebt;
+    }
+
+    private async Task ConfirmEditFirstName()
+    {
+        client.FirstName = editedClient.FirstName;
+        editModeFirstName = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditLastName()
+    {
+        client.LastName = editedClient.LastName;
+        editModeLastName = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditEmployer()
+    {
+        client.Employer = editedClient.Employer;
+        editModeEmployer = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditEmail()
+    {
+        client.Email = editedClient.Email;
+        editModeEmail = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditPhone()
+    {
+        client.Phone = editedClient.Phone;
+        editModePhone = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditAddress()
+    {
+        client.Address = editedClient.Address;
+        editModeAddress = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private async Task ConfirmEditDebt()
+    {
+        client.Debt = editedClient.Debt;
+        editModeDebt = false;
+
+        // Save the changes to the service
+        await iEmpService.UpdateClient(client);
+    }
+
+    private void GoBack()
+    {
+        navigationManager.NavigateTo("/AccountView");
+    }
+}
+

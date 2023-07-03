@@ -1,0 +1,129 @@
+﻿@page "/"
+@inject NavigationManager navigationManager
+@inject IEmpService iEmpService
+<style>
+    body {
+        background: linear-gradient(to bottom right, #790909, #db00ff);
+    }
+
+    .content {
+        margin-top: 5%;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .headline {
+        font-size: 3rem;
+        margin-top: -30px;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: red;
+        border-color: red;
+    }
+</style>
+
+<div class="content">
+    <div class="container">
+        <h1 class="text-center text-white mb-4 headline">MyInsurance</h1>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-5">Login to Your Account</h2>
+                        <form @onsubmit="HandleSubmit">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="text" class="form-control rounded-pill" id="email" placeholder="Enter your email" @bind-value="@email" />
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control rounded-pill" id="password" placeholder="Enter your password" @bind-value="@password" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block rounded-pill">Login</button>
+                            <hr />
+                            <p>
+                                Don't have an account? <a href="/register" class="text-primary">Register here.</a>
+                            </p>
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger mt-3" role="alert">@errorMessage</div>
+                            }
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+@code {
+    private string email { get; set; }
+    private string password { get; set; }
+    private string errorMessage { get; set; }
+
+    private async Task HandleSubmit()
+    {
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        {
+            errorMessage = "email and password are required.";
+
+        }
+
+        errorMessage = null;
+
+
+        bool isAuthenticated = await AuthenticateUser(email, password);
+
+        if (isAuthenticated)
+        {
+            toAccountView();
+        }
+    }
+
+    private async Task<bool>
+        AuthenticateUser(string username, string password)
+    {
+        var request = await iEmpService.Login(new Employee(null, null, email, password, null));
+
+        if (request.Success)
+        {
+            errorMessage = null;
+            return true;
+        }
+
+        errorMessage = request.Error;
+        return false;
+    }
+
+
+    private void register()
+    {
+        navigationManager.NavigateTo("/register");
+    }
+
+    private void toAccountView()
+    {
+        navigationManager.NavigateTo("/AccountView");
+    }
+
+
+
+}
+

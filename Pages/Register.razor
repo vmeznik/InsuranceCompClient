@@ -1,0 +1,142 @@
+﻿@page "/register"
+@inject IEmpService iEmpService
+@inject NavigationManager NavigationManager
+
+<style>
+    body {
+        background: linear-gradient(to bottom right, #790909, #db00ff);
+    }
+
+    .content {
+        margin-top: 0;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .headline {
+        font-size: 3rem;
+        margin-top: -30px;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: red;
+        border-color: red;
+    }
+</style>
+
+<div class="content">
+    <div class="container">
+        <h1 class="text-center text-white mb-4 headline">MyInsurance</h1>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">Register</h2>
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" placeholder="Enter first name" @bind-value="firstName">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" placeholder="Enter last name" @bind-value="lastName">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter email" @bind-value="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Password" @bind-value="password">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" @bind-value="confirmPassword">
+                        </div>
+                        <div class="form-group">
+                            <div class="alert alert-danger" role="alert" style="display:@(string.IsNullOrEmpty(errorMessage) ? "none" : "block")">
+                                @errorMessage
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" @onclick="RegisterUser">Create Account</button>
+                        </div>
+                        <p class="text-center">
+                            Already have an account? <a href="" class="text-primary">Login here.</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private string firstName;
+    private string lastName;
+    private string email;
+    private string password;
+    private string confirmPassword;
+    private string errorMessage;
+
+    private async Task RegisterUser()
+    {
+
+        if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) ||
+            string.IsNullOrEmpty(password) || string.IsNullOrEmpty(email) ||
+            string.IsNullOrEmpty(confirmPassword))
+        {
+            errorMessage = "Please fill all the columns.";
+
+
+        }
+        else if (password.Equals(confirmPassword) != true)
+        {
+            errorMessage = "Passwords are not the same.";
+
+        }
+        else if (!email.Contains("@") || !email.Contains("."))
+        {
+            errorMessage = "Wrong format of an email address";
+
+        }
+        else
+        {
+            errorMessage = null;
+
+
+            bool isAuthenticated = await AuthenticateUser(firstName, lastName, email, password);
+
+            if (isAuthenticated)
+            {
+                toLogin();
+            }
+        }
+
+    }
+
+    private async Task<bool> AuthenticateUser(string firstName, string lastName, string email, string password)
+    {
+        var request = await iEmpService.Register(new Employee(firstName, lastName, email, password, null));
+
+        if (request.Success)
+        {
+            errorMessage = null;
+            toLogin();
+            return true;
+        }
+
+        errorMessage = request.Error;
+        return false;
+    }
+
+    private void toLogin()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}
+

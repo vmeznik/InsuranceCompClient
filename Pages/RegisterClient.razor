@@ -1,0 +1,148 @@
+﻿@page "/registerClient"
+@using System.Threading.Tasks
+@using System.Text.RegularExpressions;
+@inject NavigationManager navigationManager
+@inject IEmpService iEmpService
+
+<style>
+    body {
+        background: linear-gradient(to bottom right, #790909, #db00ff);
+    }
+
+    .content {
+        margin-top: 0;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .headline {
+        font-size: 3rem;
+        margin-top: -30px;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: red;
+        border-color: red;
+    }
+</style>
+
+<div class="content">
+    <div class="container">
+        <h1 class="text-center text-white mb-4 headline">MyInsurance</h1>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-sm-12">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">Register</h2>
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" placeholder="Enter first name" @bind="@firstName">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" placeholder="Enter last name" @bind="@lastName">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter email" @bind="@email">
+                        </div>
+                        <div class="form-group">
+                            <label for="employer">Employer</label>
+                            <input type="text" class="form-control" id="employer" placeholder="Enter employer" @bind="@employer">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="text" class="form-control" id="phone" placeholder="Enter phone" @bind="@phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" class="form-control" id="address" placeholder="Enter address" @bind="@address">
+                        </div>
+                        <div class="form-group">
+                            <div class="alert alert-danger" role="alert" style="display:@(string.IsNullOrEmpty(errorMessage) ? "none" : "block")">
+                                @errorMessage
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" @onclick="RegisterUser">Create Account</button>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-link" @onclick="GoBack">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private string firstName;
+    private string lastName;
+    private string email;
+    private string employer;
+    private string phone;
+    private string address;
+    private string errorMessage;
+
+    private async Task RegisterUser()
+    {
+        if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) ||
+            string.IsNullOrEmpty(email) || string.IsNullOrEmpty(employer) ||
+            string.IsNullOrEmpty(phone) || string.IsNullOrEmpty(address))
+        {
+            errorMessage = "Please fill all the fields.";
+        }
+        else if (!email.Contains("@") || !email.Contains("."))
+        {
+            errorMessage = "Wrong format of an email address";
+
+        }
+        else if (!CheckStringFormat(phone))
+        {
+            errorMessage = "Wrong format of a phone number use - 555 555 555 ";
+        }
+        else
+        {
+            errorMessage = null;
+
+
+            bool isAuthenticated = await AuthenticateUser(firstName, lastName, employer, email, phone, address);
+        }
+    }
+
+    private async Task<bool> AuthenticateUser(string firstName, string lastName, string employer,
+        string email, string phone, string address)
+    {
+        var request = await iEmpService.RegisterClient(new Client(firstName, lastName, null, employer, email,
+            phone, 0.0, address));
+
+        if (request.Success)
+        {
+            errorMessage = null;
+            navigationManager.NavigateTo("/AccountView");
+            return true;
+        }
+
+        errorMessage = request.Error;
+        return false;
+    }
+
+    private void GoBack()
+    {
+        navigationManager.NavigateTo("/AccountView");
+    }
+
+    private bool CheckStringFormat(string input)
+    {
+        string pattern = @"^\d{3} \d{3} \d{3}$";
+        return Regex.IsMatch(input, pattern);
+    }
+}
+
+}

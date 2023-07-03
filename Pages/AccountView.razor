@@ -1,0 +1,122 @@
+﻿@page "/AccountView"
+@using System.Collections.Generic
+@inject IEmpService iEmpService
+@inject NavigationManager navigationManager
+
+<style>
+    /* Styles for the page layout */
+    body {
+        background: linear-gradient(to bottom right, #790909, #db00ff);
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .headline {
+        font-size: 3rem;
+        margin-top: -30px;
+        color: white;
+    }
+
+    .search-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-input {
+        width: 400px;
+        margin-right: 10px;
+    }
+
+    .search-button {
+        background-color: red;
+        border-color: red;
+    }
+
+    .register-button {
+        margin-top: 10px;
+    }
+
+    .logout-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="content">
+    <h1 class="text-center text-white mb-4 headline">MyInsurance</h1>
+
+    <div class="search-container">
+        <input type="text" class="form-control search-input" placeholder="Search" @bind="@id" @onkeydown="HandleSearchKeyDown" />
+        <button class="btn btn-primary search-button" @onclick="HandleSearch">Confirm</button>
+    </div>
+
+    <p class="error-message">@errorMessage</p>
+
+    <button class="btn btn-primary register-button" @onclick="GoToRegister">Register new client</button>
+</div>
+
+<button class="btn btn-primary logout-button" @onclick="Logout">Logout</button>
+
+@code {
+    private string id;
+    private string errorMessage;
+
+    private async void HandleSearch()
+    {
+        bool isAuthenticated = await AuthenticateClientsId(id);
+    }
+
+    private async Task<bool> AuthenticateClientsId(string id)
+    {
+        Client client = await iEmpService.ClientsInfo(new Client(null, null, id, null, null,
+            null, 0.0, null));
+
+        if (client != null)
+        {
+            errorMessage = null;
+            navigationManager.NavigateTo("/ClientInfoDetail");
+            return true;
+        }
+
+        errorMessage = "Id does not exist";
+        return false;
+    }
+
+    private void HandleSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            HandleSearch();
+        }
+    }
+
+    private void GoToRegister()
+    {
+        navigationManager.NavigateTo("registerClient");
+    }
+
+    private void Logout()
+    {
+        navigationManager.NavigateTo("/");
+    }
+}
+
+
+
+
+
